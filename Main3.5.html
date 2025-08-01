@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de errores en Digitación</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --color-boton: #06502f;
+            --color-texto-boton: #dcde5b;
+            --color-fondo: #121212;
+            --color-fondo-secundario: #1e1e1e;
+            --color-texto: #e0e0e0;
+            --color-borde: #333;
+            --color-destacado: #2d7d46;
+            --color-busqueda: #2a4365;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--color-fondo);
+            color: var(--color-texto);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: var(--color-fondo-secundario);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 90px);
+        }
+        
+        h1 {
+            color: var(--color-texto);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 28px;
+            border-bottom: 2px solid var(--color-destacado);
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: var(--color-texto);
+            border-left: 4px solid var(--color-destacado);
+            padding-left: 10px;
+            margin-top: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--color-texto);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--color-borde);
+            border-radius: 4px;
+            background-color: var(--color-fondo);
+            color: var(--color-texto);
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--color-destacado);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background-color: var(--color-boton);
+            color: var(--color-texto-boton);
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            flex: 1;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .search-btn {
+            background-color: var(--color-busqueda);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: var(--color-fondo-secundario);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--color-borde);
+        }
+        
+        th {
+            background-color: var(--color-destacado);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .footer {
+            margin-top: auto;
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            border-top: 1px solid var(--color-borde);
+            padding-top: 20px;
+        }
+        
+        .creditos {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .contact-btn {
+            background-color: var(--color-boton);
+            color: var(--color-texto-boton);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-block;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+        
+        .contact-btn:hover {
+            background-color: #054028;
+            transform: translateY(-2px);
+        }
+        
+        .search-section {
+            background-color: var(--color-fondo);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid var(--color-borde);
+        }
+        
+        .search-results {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .week-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .week-selector select {
+            flex: 1;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .week-selector {
+                flex-direction: column;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Errores en Digitación</h1>
+        
+        <!-- Formulario de registro -->
+        <div class="form-group">
+            <label for="ordenTrabajo">Orden de Trabajo:</label>
+            <input type="text" id="ordenTrabajo" required>
+        </div>
+        <div class="form-group">
+            <label for="digitador">Digitador:</label>
+            <select id="digitador" required>
+                <option value="">Seleccione una digitadora</option>
+                <option value="Yarvalin">Yarvalin</option>
+                <option value="Katherine">Katherine</option>
+                <option value="Myriam">Myriam</option>
+                <option value="M. Angélica">M. Angélica</option>
+                <option value="Nicole">Nicole</option>
+                <option value="Cinthya">Cinthya</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="error">Error:</label>
+            <textarea id="error" rows="4" required></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button id="btnRegistrar">Registrar Error</button>
+            <button id="btnExportar">Exportar a Excel</button>
+        </div>
+        
+        <!-- Sección de búsqueda -->
+        <div class="search-section">
+            <h2>Búsqueda de Registros</h2>
+            <div class="week-selector">
+                <select id="semana">
+                    <option value="all">Todas las semanas</option>
+                </select>
+                <select id="anio">
+                    <option value="all">Todos los años</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="busqueda">Buscar por:</label>
+                <input type="text" id="busqueda" placeholder="N° de orden o nombre de digitador">
+            </div>
+            <div class="button-group">
+                <button class="search-btn" id="btnBuscar">Buscar</button>
+                <button id="btnLimpiar">Limpiar</button>
+            </div>
+            
+            <div class="search-results">
+                <table id="resultadosBusqueda">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Semana</th>
+                            <th>Orden de Trabajo</th>
+                            <th>Digitador</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="creditos">
+                <p>Aplicación diseñada por <strong>Matías Riveros</strong></p>
+                <p>© 2025 - Solo para fines personales</p>
+                <p>Prohibida su venta o modificación sin consentimiento del autor</p>
+            </div>
+            <a href="mailto:matiasriveross@gmail.com" class="contact-btn">
+                Contactar al desarrollador
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Almacenamiento local
+        const STORAGE_KEY = 'registrosErrores';
+        let registrosErrores = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        
+        // Elementos del DOM
+        const elementos = {
+            ordenTrabajo: document.getElementById('ordenTrabajo'),
+            digitador: document.getElementById('digitador'),
+            error: document.getElementById('error'),
+            semana: document.getElementById('semana'),
+            anio: document.getElementById('anio'),
+            busqueda: document.getElementById('busqueda'),
+            resultadosBusqueda: document.querySelector('#resultadosBusqueda tbody'),
+            btnRegistrar: document.getElementById('btnRegistrar'),
+            btnExportar: document.getElementById('btnExportar'),
+            btnBuscar: document.getElementById('btnBuscar'),
+            btnLimpiar: document.getElementById('btnLimpiar')
+        };
+
+        // Event Listeners
+        elementos.btnRegistrar.addEventListener('click', registrarError);
+        elementos.btnExportar.addEventListener('click', exportarExcel);
+        elementos.btnBuscar.addEventListener('click', buscarRegistros);
+        elementos.btnLimpiar.addEventListener('click', limpiarBusqueda);
+
+        // Inicializar selectores de semana y año
+        function inicializarSelectores() {
+            const selectorSemana = elementos.semana;
+            const selectorAnio = elementos.anio;
+            
+            // Limpiar opciones existentes
+            selectorSemana.innerHTML = '<option value="all">Todas las semanas</option>';
+            selectorAnio.innerHTML = '<option value="all">Todos los años</option>';
+            
+            // Obtener semanas y años únicos de los registros
+            const semanasUnicas = new Set();
+            const aniosUnicos = new Set();
+            
+            registrosErrores.forEach(registro => {
+                const fecha = new Date(registro.fecha);
+                const semana = getWeekNumber(fecha);
+                const anio = fecha.getFullYear();
+                
+                semanasUnicas.add(`Semana ${semana} - ${anio}`);
+                aniosUnicos.add(anio);
+            });
+            
+            // Agregar semanas al selector
+            [...semanasUnicas].sort().forEach(semana => {
+                const option = document.createElement('option');
+                option.value = semana;
+                option.textContent = semana;
+                selectorSemana.appendChild(option);
+            });
+            
+            // Agregar años al selector
+            [...aniosUnicos].sort().forEach(anio => {
+                const option = document.createElement('option');
+                option.value = anio;
+                option.textContent = anio;
+                selectorAnio.appendChild(option);
+            });
+        }
+        
+        // Obtener número de semana
+        function getWeekNumber(date) {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+            const week1 = new Date(d.getFullYear(), 0, 4);
+            return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        }
+        
+        // Registrar nuevo error
+        function registrarError() {
+            const ordenTrabajo = elementos.ordenTrabajo.value.trim();
+            const digitador = elementos.digitador.value;
+            const error = elementos.error.value.trim();
+            
+            if (!ordenTrabajo || !digitador || !error) {
+                mostrarNotificacion('Todos los campos son obligatorios', true);
+                return;
+            }
+            
+            const fecha = new Date();
+            const semana = getWeekNumber(fecha);
+            const anio = fecha.getFullYear();
+            
+            const registro = {
+                id: Date.now(),
+                fecha: fecha.toISOString(),
+                semana: `Semana ${semana} - ${anio}`,
+                ordenTrabajo: ordenTrabajo,
+                digitador: digitador,
+                error: error
+            };
+            
+            registrosErrores.push(registro);
+            guardarRegistros();
+            inicializarSelectores();
+            
+            elementos.ordenTrabajo.value = '';
+            elementos.error.value = '';
+            
+            mostrarNotificacion('✓ Error registrado correctamente');
+        }
+        
+        // Guardar registros en localStorage
+        function guardarRegistros() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(registrosErrores));
+        }
+        
+        // Buscar registros
+        function buscarRegistros() {
+            const busqueda = elementos.busqueda.value.toLowerCase();
+            const semanaSeleccionada = elementos.semana.value;
+            const anioSeleccionado = elementos.anio.value;
+            
+            let resultados = registrosErrores;
+            
+            // Filtrar por semana si no es "Todas"
+            if (semanaSeleccionada !== 'all') {
+                resultados = resultados.filter(r => r.semana === semanaSeleccionada);
+            }
+            
+            // Filtrar por año si no es "Todos"
+            if (anioSeleccionado !== 'all') {
+                resultados = resultados.filter(r => r.semana.includes(anioSeleccionado));
+            }
+            
+            // Filtrar por término de búsqueda
+            if (busqueda) {
+                resultados = resultados.filter(r => 
+                    r.ordenTrabajo.toLowerCase().includes(busqueda) || 
+                    r.digitador.toLowerCase().includes(busqueda)
+                );
+            }
+            
+            mostrarResultados(resultados);
+        }
+        
+        // Mostrar resultados de búsqueda
+        function mostrarResultados(resultados) {
+            const tbody = elementos.resultadosBusqueda;
+            tbody.innerHTML = '';
+            
+            if (resultados.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="5" style="text-align: center;">No se encontraron registros</td>';
+                tbody.appendChild(tr);
+                return;
+            }
+            
+            resultados.forEach(registro => {
+                const fecha = new Date(registro.fecha);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${fecha.toLocaleString()}</td>
+                    <td>${registro.semana}</td>
+                    <td>${registro.ordenTrabajo}</td>
+                    <td>${registro.digitador}</td>
+                    <td>${registro.error}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // Limpiar búsqueda
+        function limpiarBusqueda() {
+            elementos.busqueda.value = '';
+            elementos.semana.value = 'all';
+            elementos.anio.value = 'all';
+            mostrarResultados([]);
+        }
+        
+        // Exportar a Excel
+        function exportarExcel() {
+            if (registrosErrores.length === 0) {
+                mostrarNotificacion('No hay registros para exportar', true);
+                return;
+            }
+            
+            // Organizar por semanas
+            const registrosPorSemana = {};
+            registrosErrores.forEach(registro => {
+                if (!registrosPorSemana[registro.semana]) {
+                    registrosPorSemana[registro.semana] = [];
+                }
+                registrosPorSemana[registro.semana].push(registro);
+            });
+            
+            // Crear libro de Excel con una hoja por semana
+            const workbook = XLSX.utils.book_new();
+            
+            Object.keys(registrosPorSemana).sort().forEach(semana => {
+                const worksheet = XLSX.utils.json_to_sheet(registrosPorSemana[semana]);
+                XLSX.utils.book_append_sheet(workbook, worksheet, semana.substring(0, 31)); // Limitar a 31 caracteres
+            });
+            
+            XLSX.writeFile(workbook, `registro_errores_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            mostrarNotificacion('✓ Archivo Excel generado correctamente');
+        }
+        
+        // Mostrar notificación
+        function mostrarNotificacion(mensaje, esError = false) {
+            const notification = document.createElement('div');
+            notification.textContent = mensaje;
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.backgroundColor = esError ? '#d32f2f' : '#06502f';
+            notification.style.color = '#ffffff';
+            notification.style.padding = '15px';
+            notification.style.borderRadius = '4px';
+            notification.style.zIndex = '1000';
+            notification.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+            notification.style.animation = 'fadeIn 0.3s';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.5s';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+        
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarSelectores();
+        });
+    </script>
+</body>
+</html>
